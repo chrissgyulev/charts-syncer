@@ -19,6 +19,7 @@ import (
 
 	"github.com/juju/errors"
 	"github.com/mkmik/multierror"
+	"helm.sh/helm/v3/pkg/chart"
 	helmRepo "helm.sh/helm/v3/pkg/repo"
 	"k8s.io/klog"
 
@@ -459,6 +460,18 @@ func ShouldIgnoreRepo(repo api.Repo, syncTrusted, ignoreTrusted []*api.Repo) boo
 
 	for _, ignoreTrRepo := range ignoreTrusted {
 		if GetRepoLocationId(GetRepoLocation(ignoreTrRepo)) == repoLocationId {
+			return true
+		}
+	}
+
+	return false
+}
+
+func ShouldIgnoreDependency(dependency *chart.Dependency, ignoreTrusted []*api.Repo) bool {
+	dependencyRepoUrl := strings.TrimSuffix(dependency.Repository, "/")
+	for _, ignoreTrRepo := range ignoreTrusted {
+		trustedRepoUrl := strings.TrimSuffix(ignoreTrRepo.GetUrl(), "/")
+		if trustedRepoUrl == dependencyRepoUrl {
 			return true
 		}
 	}

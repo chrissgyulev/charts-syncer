@@ -2,9 +2,10 @@ package syncer
 
 import (
 	"fmt"
-	"github.com/bitnami-labs/charts-syncer/api"
 	"sort"
 	"time"
+
+	"github.com/bitnami-labs/charts-syncer/api"
 
 	"github.com/Masterminds/semver/v3"
 	"github.com/juju/errors"
@@ -235,6 +236,12 @@ func (s *Syncer) loadChart(name string, version string, repository string, isDep
 
 		var errs error
 		for _, dep := range deps {
+			if utils.ShouldIgnoreDependency(dep, s.source.IgnoreTrustedRepos) {
+				klog.V(4).Infof("Ignoring dependency %q because it is listed in ignoreTrustedRepos as URL %q",
+					dep.Name, dep.Repository)
+				continue
+			}
+
 			depID := fmt.Sprintf("%s-%s", dep.Name, dep.Version)
 			if err := s.loadChart(dep.Name, dep.Version, dep.Repository, true); err != nil {
 				errs = multierror.Append(errs, errors.Annotatef(err, "invalid %q chart dependency", depID))
